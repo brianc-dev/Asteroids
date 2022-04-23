@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="main_prefs"
+    >
+
+    <CheckBoxPreference
+        android:key="music"
+        android:title="Play music"
+        android:summary="Turn on/off the music" />
+    <ListPreference
+        android:key="graphics"
+        android:title="Types of graphics"
+        android:summary="Choose which graphic style to play with"
+        android:entries="@array/graphicTypes"
+        android:entryValues="@array/graphicsTypesValues"
+        android:defaultValue="1" />
+    <EditTextPreference
+        android:key="particles"
+        android:title="Number of particles"
+        android:summary="How many particles an asteroid will be divided"
+        android:defaultValue="3"
+        />
+</PreferenceScreen>
