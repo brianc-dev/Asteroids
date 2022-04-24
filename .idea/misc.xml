@@ -3,9 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="../../../../layout/custom_preview.xml" value="0.2828125" />
         <entry key="app/src/main/res/layout-land/activity_main.xml" value="0.22" />
         <entry key="app/src/main/res/layout/about.xml" value="0.2677083333333333" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/asteroids_game.xml" value="0.21975203078238564" />
         <entry key="app/src/main/res/layout/list_element.xml" value="0.21975203078238564" />
         <entry key="app/src/main/res/layout/scores.xml" value="0.21975203078238564" />
         <entry key="app/src/main/res/xml/preferences.xml" value="0.21975203078238564" />

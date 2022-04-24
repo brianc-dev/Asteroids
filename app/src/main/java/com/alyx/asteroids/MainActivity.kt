@@ -14,6 +14,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        findViewById<Button>(R.id.Button1).setOnClickListener {
+            launchGame()
+        }
         findViewById<Button>(R.id.Button2).setOnClickListener {
             launchSettings()
         }
@@ -23,7 +26,11 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.Button4).setOnClickListener {
             launchScores()
         }
+    }
 
+    private fun launchGame() {
+        val intent = Intent(this, AsteroidsGame::class.java)
+        startActivity(intent)
     }
 
     private fun launchAbout() {
