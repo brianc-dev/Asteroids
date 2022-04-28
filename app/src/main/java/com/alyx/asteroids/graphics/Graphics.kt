@@ -3,6 +3,7 @@ package com.alyx.asteroids.graphics
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.view.View
+import kotlin.math.hypot
 
 class Graphics(
     private val view: View,
@@ -33,9 +34,6 @@ class Graphics(
         drawable.draw(canvas)
         canvas.restore()
         view.invalidate()
-//        or
-//        val rInval = Math.hypot(width.toDouble(), height.toDouble()).toInt() / 2 + MAX_SPEED
-//        view.invalidate(x - rInval, y - rInval, x + rInval, y + rInval)
     }
 
     fun incrementPos(factor: Double) {
@@ -48,7 +46,7 @@ class Graphics(
         angle += rotation * factor
     }
 
-    fun distance(graphics: Graphics) = Math.hypot(posX - graphics.posX, posY - graphics.posY)
+    fun distance(graphics: Graphics) = hypot(posX - graphics.posX, posY - graphics.posY)
 
     fun checkCollision(graphics: Graphics) = (distance(graphics) < (collisionRadio + graphics.collisionRadio))
 }

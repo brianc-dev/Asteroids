@@ -12,11 +12,27 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 import com.alyx.asteroids.graphics.Graphics
+import kotlin.math.hypot
 
 private const val SHIP_TILT_STEP = 5
 private const val SHIP_ACCELERATION_STEP = 0.5f
 
 class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
+
+    companion object {
+        private const val EXECUTION_PERIOD = 50
+    }
+
+    inner class GameThread : Thread() {
+        override fun run() {
+            while (true) {
+                updatePhysics()
+            }
+        }
+    }
+
+    private val thread: GameThread = GameThread()
+    private var lastProcess: Long = 0L
 
     private val asteroids: MutableList<Graphics>
     private val asteroidsNumber = 5
@@ -85,6 +101,9 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
             asteroid.posY = Math.random() * (h - asteroid.height)
             } while (asteroid.distance(ship) < (w + h) / 5)
         }
+
+        lastProcess = System.currentTimeMillis()
+        thread.start()
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -96,6 +115,31 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
             for (asteroid in asteroids) {
                 asteroid.drawGraphic(it)
             }
+        }
+    }
+
+    private fun updatePhysics() {
+        val now = System.currentTimeMillis()
+
+        if (lastProcess + EXECUTION_PERIOD > now) {
+            return
+        }
+
+        val delay: Double = ((now - lastProcess) / EXECUTION_PERIOD).toDouble()
+        lastProcess = now
+
+        ship.angle = ship.angle + shipTilt * delay
+        val nIncX = ship.incX + shipAcceleration * Math.cos(Math.toRadians(ship.angle)) * delay
+        val nIncY = ship.incY + shipAcceleration * Math.sin(Math.toRadians(ship.angle)) * delay
+
+        if (hypot(nIncX, nIncY) <= Graphics.MAX_SPEED) {
+            ship.incX = nIncX
+            ship.incY = nIncY
+        }
+
+        ship.incrementPos(delay)
+        for (asteroid in asteroids) {
+            asteroid.incrementPos(delay)
         }
     }
 }
