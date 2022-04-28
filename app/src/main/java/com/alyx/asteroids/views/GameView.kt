@@ -9,10 +9,13 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.PathShape
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 import com.alyx.asteroids.graphics.Graphics
+import kotlin.math.abs
 import kotlin.math.hypot
+import kotlin.math.round
 
 private const val SHIP_TILT_STEP = 5
 private const val SHIP_ACCELERATION_STEP = 0.5f
@@ -31,6 +34,10 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
         }
     }
 
+    private var mX = 0
+    private var mY = 0
+    private var shot = false
+
     private val thread: GameThread = GameThread()
     private var lastProcess: Long = 0L
 
@@ -40,8 +47,8 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
 
     // Ship
     private val ship: Graphics
-    private val shipTilt: Int = 0
-    private val shipAcceleration: Float = 0f
+    private var shipTilt: Int = 0
+    private var shipAcceleration: Float = 0f
 
     init {
         val asteroidDrawable: Drawable
@@ -106,6 +113,41 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
         thread.start()
     }
 
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        super.onTouchEvent(event)
+        requireNotNull(event)
+        val x = event.x
+        val y = event.y
+
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                shot = true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = abs(x - mX)
+                val dy = abs(y - mY)
+
+                if (dy < 6 && dx > 6) {
+                    shipTilt = round((x - mX) / 2.0).toInt()
+                    shot = false
+                } else if (dx < 6 && dy > 6) {
+                    shipAcceleration = round((mY - y) / 25.0F)
+                    shot = false
+                }
+            }
+            MotionEvent.ACTION_UP -> {
+                shipTilt = 0
+                shipAcceleration = 0F
+                if (shot) {
+//                    launchMissile()
+                }
+            }
+        }
+        mX = x.toInt(); mY = y.toInt()
+        return true
+    }
+
+    @Synchronized
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         canvas?.let {
@@ -118,6 +160,7 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
         }
     }
 
+    @Synchronized
     private fun updatePhysics() {
         val now = System.currentTimeMillis()
 
