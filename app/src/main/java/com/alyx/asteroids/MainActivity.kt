@@ -16,8 +16,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val anim = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.turn_and_zoom)
-        val anim2 = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.appear)
+        val anim = AnimationUtils.loadAnimation(this, R.anim.turn_and_zoom)
+        val anim2 = AnimationUtils.loadAnimation(this, R.anim.appear)
         val anim3 = AnimationUtils.loadAnimation(this, R.anim.right_translation)
         findViewById<TextView>(R.id.game_title).startAnimation(anim)
         findViewById<Button>(R.id.Button1).also {

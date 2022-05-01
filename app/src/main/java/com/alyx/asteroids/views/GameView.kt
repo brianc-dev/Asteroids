@@ -8,14 +8,13 @@ import android.graphics.Path
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.PathShape
+import android.graphics.drawable.shapes.RectShape
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 import com.alyx.asteroids.graphics.Graphics
-import kotlin.math.abs
-import kotlin.math.hypot
-import kotlin.math.round
+import kotlin.math.*
 
 private const val SHIP_TILT_STEP = 5
 private const val SHIP_ACCELERATION_STEP = 0.5f
@@ -24,6 +23,7 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
 
     companion object {
         private const val EXECUTION_PERIOD = 50
+        private const val MISSILE_SPEED_STEP = 12
     }
 
     inner class GameThread : Thread() {
@@ -33,6 +33,11 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
             }
         }
     }
+
+    // Missile
+    private val missile: Graphics
+    private var missileActive = false
+    private var missileTime = 0
 
     private var mX = 0
     private var mY = 0
@@ -52,6 +57,7 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
 
     init {
         val asteroidDrawable: Drawable
+        val missileDrawable: Drawable
         val sharedPreferences = context.getSharedPreferences("com.alyx.asteroids_preferences", Context.MODE_PRIVATE)
         if (sharedPreferences.getString("graphics", "1").equals("0")) {
             val asteroidPath = Path()
@@ -75,13 +81,25 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
 
             asteroidDrawable = asteroidD
             setBackgroundColor(Color.BLACK)
+
+            // Initialize missile
+            val missileD = ShapeDrawable(RectShape())
+            missileD.paint.color = Color.WHITE
+            missileD.paint.style = Paint.Style.STROKE
+            missileD.intrinsicWidth = 15
+            missileD.intrinsicHeight = 3
+            missileDrawable = missileD
+
         } else {
-            asteroidDrawable = ResourcesCompat.getDrawable(context.resources, android.R.drawable.star_on, null) ?: throw NoSuchElementException()//context.resources.getDrawable(android.R.drawable.star_on)
+            asteroidDrawable = ResourcesCompat.getDrawable(context.resources, android.R.drawable.star_on, null) ?: throw NoSuchElementException()
+            missileDrawable = ResourcesCompat.getDrawable(context.resources, android.R.drawable.arrow_up_float, null) ?: throw NoSuchElementException()
         }
 
-        val shipDrawable: Drawable = ResourcesCompat.getDrawable(context.resources, android.R.drawable.arrow_up_float, null) ?: throw NoSuchElementException()
-        val missile: Drawable
+        // Missile initialize
+        this.missile = Graphics(this, missileDrawable)
 
+        // Ship initialize
+        val shipDrawable: Drawable = ResourcesCompat.getDrawable(context.resources, android.R.drawable.arrow_up_float, null) ?: throw NoSuchElementException()
         this.ship = Graphics(this, shipDrawable)
 
         asteroids = mutableListOf()
@@ -139,7 +157,7 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
                 shipTilt = 0
                 shipAcceleration = 0F
                 if (shot) {
-//                    launchMissile()
+                    launchMissile()
                 }
             }
         }
@@ -157,6 +175,10 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
             for (asteroid in asteroids) {
                 asteroid.drawGraphic(it)
             }
+
+            if (missileActive) {
+                missile.drawGraphic(it)
+            }
         }
     }
 
@@ -172,8 +194,8 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
         lastProcess = now
 
         ship.angle = ship.angle + shipTilt * delay
-        val nIncX = ship.incX + shipAcceleration * Math.cos(Math.toRadians(ship.angle)) * delay
-        val nIncY = ship.incY + shipAcceleration * Math.sin(Math.toRadians(ship.angle)) * delay
+        val nIncX = ship.incX + shipAcceleration * cos(Math.toRadians(ship.angle)) * delay
+        val nIncY = ship.incY + shipAcceleration * sin(Math.toRadians(ship.angle)) * delay
 
         if (hypot(nIncX, nIncY) <= Graphics.MAX_SPEED) {
             ship.incX = nIncX
@@ -184,5 +206,34 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
         for (asteroid in asteroids) {
             asteroid.incrementPos(delay)
         }
+
+        if (missileActive) {
+            missile.incrementPos(delay)
+            missileTime -= delay.toInt()
+            if (missileTime < 0) {
+                missileActive = false
+            } else {
+                for (i in  0 until asteroids.size) {
+                    if (missile.checkCollision(asteroids[i])) {
+                        destroyAsteroid(i)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun destroyAsteroid(i: Int) {
+        asteroids.removeAt(i)
+        missileActive = false
+    }
+
+    private fun launchMissile() {
+        missile.posX = ship.posX + ship.width / 2.0 - missile.width / 2.0
+        missile.posY = ship.posY + ship.height / 2.0 - missile.height / 2.0
+        missile.angle = ship.angle
+        missile.incX = cos(Math.toRadians(missile.angle) * MISSILE_SPEED_STEP)
+        missile.incY = sin(Math.toRadians(missile.angle) * MISSILE_SPEED_STEP)
+        missileTime = (minOf(this.width / abs(missile.incX), this.height / abs(missile.incY)) - 2).toInt()
+        missileActive = true
     }
 }
