@@ -9,30 +9,81 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.PathShape
 import android.graphics.drawable.shapes.RectShape
+import android.media.AudioAttributes
+import android.media.AudioManager
+import android.media.SoundPool
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
+import com.alyx.asteroids.R
 import com.alyx.asteroids.graphics.Graphics
+import kotlinx.coroutines.*
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import kotlin.NoSuchElementException
+import kotlin.coroutines.CoroutineContext
 import kotlin.math.*
+import kotlin.properties.Delegates
 
 private const val SHIP_TILT_STEP = 5
 private const val SHIP_ACCELERATION_STEP = 0.5f
 
-class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
+class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     companion object {
         private const val EXECUTION_PERIOD = 50
         private const val MISSILE_SPEED_STEP = 12
     }
 
-    inner class GameThread : Thread() {
+    inner class GameThread() : Thread("GamePhysicsThread") {
+
+        private var running = true
+        private var stop = false
+
+        @Synchronized
+        fun pauseTh() {
+            running = false
+        }
+
+        @Synchronized
+        fun resumeTh() {
+            running = true
+        }
+
+        fun stopTh() {
+            stop = true
+        }
+
         override fun run() {
-            while (true) {
-                updatePhysics()
+            while (!this.isInterrupted) {
+                if (running) {
+                    updatePhysics()
+                    synchronized(this) {
+                        while (stop) {
+                            try {
+                                this.interrupt()
+                            } catch (e: Exception) {
+
+                            }
+                        }
+                    }
+                } else {
+                    try {
+                        sleep(100)
+                    } catch (e: Exception) {
+
+                    }
+                }
             }
         }
     }
+
+    // Sound
+    private val soundPool: SoundPool
+    private val missileSoundId: Int
+    private val explosionSoundId: Int
 
     // Missile
     private val missile: Graphics
@@ -43,10 +94,10 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
     private var mY = 0
     private var shot = false
 
-    private val thread: GameThread = GameThread()
+    val thread: GameThread = GameThread()
     private var lastProcess: Long = 0L
 
-    private val asteroids: MutableList<Graphics>
+    private val asteroids: Vector<Graphics>
     private val asteroidsNumber = 5
     private val particlesNumber = 3
 
@@ -56,9 +107,21 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
     private var shipAcceleration: Float = 0f
 
     init {
+        // Load sound FX
+        val audioAttributes = AudioAttributes.Builder().apply {
+            setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+            setUsage(AudioAttributes.USAGE_GAME)
+            setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+        }.build()
+        soundPool = SoundPool.Builder().setMaxStreams(5).setAudioAttributes(audioAttributes).build()
+        explosionSoundId = soundPool.load(context, R.raw.explosion, 0)
+        missileSoundId = soundPool.load(context, R.raw.missile, 0)
+
+
         val asteroidDrawable: Drawable
         val missileDrawable: Drawable
-        val sharedPreferences = context.getSharedPreferences("com.alyx.asteroids_preferences", Context.MODE_PRIVATE)
+        val sharedPreferences =
+            context.getSharedPreferences("com.alyx.asteroids_preferences", Context.MODE_PRIVATE)
         if (sharedPreferences.getString("graphics", "1").equals("0")) {
             val asteroidPath = Path()
             asteroidPath.moveTo(0.3f, 0.0f)
@@ -91,18 +154,26 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
             missileDrawable = missileD
 
         } else {
-            asteroidDrawable = ResourcesCompat.getDrawable(context.resources, android.R.drawable.star_on, null) ?: throw NoSuchElementException()
-            missileDrawable = ResourcesCompat.getDrawable(context.resources, android.R.drawable.arrow_up_float, null) ?: throw NoSuchElementException()
+            asteroidDrawable =
+                ResourcesCompat.getDrawable(context.resources, android.R.drawable.star_on, null)
+                    ?: throw NoSuchElementException()
+            missileDrawable = ResourcesCompat.getDrawable(
+                context.resources,
+                android.R.drawable.arrow_up_float,
+                null
+            ) ?: throw NoSuchElementException()
         }
 
         // Missile initialize
         this.missile = Graphics(this, missileDrawable)
 
         // Ship initialize
-        val shipDrawable: Drawable = ResourcesCompat.getDrawable(context.resources, android.R.drawable.arrow_up_float, null) ?: throw NoSuchElementException()
+        val shipDrawable: Drawable =
+            ResourcesCompat.getDrawable(context.resources, android.R.drawable.arrow_up_float, null)
+                ?: throw NoSuchElementException()
         this.ship = Graphics(this, shipDrawable)
 
-        asteroids = mutableListOf()
+        asteroids = Vector(asteroidsNumber)
 
         for (i in 0 until asteroidsNumber) {
             val asteroid = Graphics(this, asteroidDrawable)
@@ -122,8 +193,8 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
 
         for (asteroid in asteroids) {
             do {
-            asteroid.posX = Math.random() * (w - asteroid.width)
-            asteroid.posY = Math.random() * (h - asteroid.height)
+                asteroid.posX = Math.random() * (w - asteroid.width)
+                asteroid.posY = Math.random() * (h - asteroid.height)
             } while (asteroid.distance(ship) < (w + h) / 5)
         }
 
@@ -213,18 +284,21 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
             if (missileTime < 0) {
                 missileActive = false
             } else {
-                for (i in  0 until asteroids.size) {
-                    if (missile.checkCollision(asteroids[i])) {
-                        destroyAsteroid(i)
+                val asteroidsIterator = asteroids.iterator()
+                for (asteroid in asteroidsIterator) {
+                    if (missile.checkCollision(asteroid)) {
+                        destroyAsteroid(asteroidsIterator)
+                        break
                     }
                 }
             }
         }
     }
 
-    private fun destroyAsteroid(i: Int) {
-        asteroids.removeAt(i)
+    private fun destroyAsteroid(iterator: MutableIterator<Graphics>) {
+        iterator.remove()
         missileActive = false
+        soundPool.play(explosionSoundId, 0.5f, 0.5f, 0, 0, 1f)
     }
 
     private fun launchMissile() {
@@ -233,7 +307,9 @@ class GameView(context: Context, attrs: AttributeSet): View(context, attrs) {
         missile.angle = ship.angle
         missile.incX = cos(Math.toRadians(missile.angle) * MISSILE_SPEED_STEP)
         missile.incY = sin(Math.toRadians(missile.angle) * MISSILE_SPEED_STEP)
-        missileTime = (minOf(this.width / abs(missile.incX), this.height / abs(missile.incY)) - 2).toInt()
+        missileTime =
+            (minOf(this.width / abs(missile.incX), this.height / abs(missile.incY)) - 2).toInt()
         missileActive = true
+        soundPool.play(missileSoundId, 1f, 1f, 0, 0, 1f)
     }
 }
