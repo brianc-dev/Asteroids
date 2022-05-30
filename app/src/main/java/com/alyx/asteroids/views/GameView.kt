@@ -1,6 +1,9 @@
 package com.alyx.asteroids.views
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -12,9 +15,11 @@ import android.graphics.drawable.shapes.RectShape
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.SoundPool
+import android.os.Bundle
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.app.BundleCompat
 import androidx.core.content.res.ResourcesCompat
 import com.alyx.asteroids.R
 import com.alyx.asteroids.graphics.Graphics
@@ -37,7 +42,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         private const val MISSILE_SPEED_STEP = 12
     }
 
-    inner class GameThread() : Thread("GamePhysicsThread") {
+    inner class GameThread : Thread("GamePhysicsThread") {
 
         private var running = true
         private var stop = false
@@ -79,6 +84,19 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             }
         }
     }
+
+    // Scores
+    private var scores = 0
+
+    private val parentActivity: Activity?
+        get() {
+            while (context is ContextWrapper) {
+                if (context is Activity) {
+                    return context as Activity
+                }
+            }
+            return null
+        }
 
     // Sound
     private val soundPool: SoundPool
@@ -255,6 +273,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     @Synchronized
     private fun updatePhysics() {
+        // Calculate delta time
         val now = System.currentTimeMillis()
 
         if (lastProcess + EXECUTION_PERIOD > now) {
@@ -264,6 +283,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         val delay: Double = ((now - lastProcess) / EXECUTION_PERIOD).toDouble()
         lastProcess = now
 
+        // Calculate ship position
         ship.angle = ship.angle + shipTilt * delay
         val nIncX = ship.incX + shipAcceleration * cos(Math.toRadians(ship.angle)) * delay
         val nIncY = ship.incY + shipAcceleration * sin(Math.toRadians(ship.angle)) * delay
@@ -274,6 +294,8 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         }
 
         ship.incrementPos(delay)
+
+        // Calculate asteroids position
         for (asteroid in asteroids) {
             asteroid.incrementPos(delay)
         }
@@ -293,12 +315,20 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 }
             }
         }
+
+        for (asteroid in asteroids) {
+            if (asteroid.checkCollision(ship)) exit()
+        }
     }
 
     private fun destroyAsteroid(iterator: MutableIterator<Graphics>) {
         iterator.remove()
         missileActive = false
         soundPool.play(explosionSoundId, 0.5f, 0.5f, 0, 0, 1f)
+        scores += 100
+        if (asteroids.isEmpty()) {
+            exit()
+        }
     }
 
     private fun launchMissile() {
@@ -311,5 +341,18 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             (minOf(this.width / abs(missile.incX), this.height / abs(missile.incY)) - 2).toInt()
         missileActive = true
         soundPool.play(missileSoundId, 1f, 1f, 0, 0, 1f)
+    }
+
+    private fun exit() {
+        val activity = parentActivity
+        val bundle = Bundle()
+        bundle.putInt("score", scores)
+        val intent = Intent().apply {
+            putExtras(bundle)
+        }
+            activity?.let {
+                it.setResult(Activity.RESULT_OK, intent)
+                it.finish()
+            }
     }
 }

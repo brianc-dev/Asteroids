@@ -37,13 +37,13 @@ class Graphics(
     }
 
     fun incrementPos(factor: Double) {
-        posX += incX * factor
+        posX += incX * factor * 1.5
         if (posX < -width / 2.0) posX = view.width - width / 2.0
         if (posX > view.width - width / 2.0) posX = -width / 2.0
-        posY += incY * factor
+        posY += incY * factor * 1.5
         if (posY < -height / 2.0) posY = view.height - height / 2.0
         if (posY > view.height - height / 2.0) posY = -width / 2.0
-        angle += rotation * factor
+        angle += rotation * factor * 1.2
     }
 
     fun distance(graphics: Graphics) = hypot(posX - graphics.posX, posY - graphics.posY)

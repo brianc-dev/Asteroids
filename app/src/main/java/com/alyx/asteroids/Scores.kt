@@ -6,13 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ListView
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 class Scores : ListActivity() {
+    private val scope = MainScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.scores)
-        listAdapter = ScoreListAdapter(this, MainActivity.scoresStorage.scoresList(10))
+        scope.launch {
+        listAdapter = ScoreListAdapter(MainActivity.scoresStorage.scoresList(10))
+        }
     }
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long) {

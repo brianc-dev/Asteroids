@@ -15,12 +15,14 @@ import com.alyx.asteroids.sounds.GameMusicService
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        val scoresStorage: ScoresStorage = ScoresStorageArray()
+        lateinit var scoresStorage: ScoresStorage
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        scoresStorage = ScoreStoragePreferences(this)
 
         val anim = AnimationUtils.loadAnimation(this, R.anim.turn_and_zoom)
         val anim2 = AnimationUtils.loadAnimation(this, R.anim.appear)
@@ -46,6 +48,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 1234 && resultCode== RESULT_OK && data != null) {
+            data.extras?.let {
+                val score = it.getInt("score")
+                val name = "me"
+                scoresStorage.saveScores(score, name, System.currentTimeMillis())
+            }
+            launchScores()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
     }
@@ -64,7 +78,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun launchGame() {
         val intent = Intent(this, AsteroidsGame::class.java)
-        startActivity(intent)
+        startActivityForResult(intent, 1234)
     }
 
     private fun launchAbout() {

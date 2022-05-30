@@ -1,6 +1,7 @@
 package com.alyx.asteroids
 
 import android.app.Activity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
@@ -9,7 +10,7 @@ import android.widget.TextView
 import java.lang.Math.round
 import kotlin.math.roundToInt
 
-class ScoreListAdapter(private val activity: Activity, private val list: List<String>) :
+class ScoreListAdapter(private val list: List<String>) :
     BaseAdapter() {
 
     override fun getCount(): Int = list.size
@@ -19,7 +20,8 @@ class ScoreListAdapter(private val activity: Activity, private val list: List<St
     override fun getItemId(position: Int): Long = position.toLong()
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val view = activity.layoutInflater.inflate(R.layout.list_element, null, true)
+        requireNotNull(parent)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.list_element, null, true)
         view.findViewById<TextView>(R.id.title).text = list[position]
 
         val imageView = view.findViewById<ImageView>(R.id.icon)

@@ -7,5 +7,5 @@ class ScoresStorageArray: ScoresStorage {
         scores.add(0, (scores + " " + name).toString())
     }
 
-    override fun scoresList(quantity: Int): List<String> = scores
+    override suspend fun scoresList(quantity: Int): List<String> = scores
 }
