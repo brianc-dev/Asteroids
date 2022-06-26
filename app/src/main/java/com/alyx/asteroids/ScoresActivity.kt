@@ -9,7 +9,7 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
-class Scores : ListActivity() {
+class ScoresActivity : ListActivity() {
     private val scope = MainScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {

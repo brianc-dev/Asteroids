@@ -13,24 +13,19 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.PathShape
 import android.graphics.drawable.shapes.RectShape
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Bundle
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.app.BundleCompat
+import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import com.alyx.asteroids.R
 import com.alyx.asteroids.graphics.Graphics
 import kotlinx.coroutines.*
 import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import kotlin.NoSuchElementException
-import kotlin.coroutines.CoroutineContext
 import kotlin.math.*
-import kotlin.properties.Delegates
 
 private const val SHIP_TILT_STEP = 5
 private const val SHIP_ACCELERATION_STEP = 0.5f
@@ -42,48 +37,10 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         private const val MISSILE_SPEED_STEP = 12
     }
 
-    inner class GameThread : Thread("GamePhysicsThread") {
+    private val TAG = "GameView"
 
-        private var running = true
-        private var stop = false
-
-        @Synchronized
-        fun pauseTh() {
-            running = false
-        }
-
-        @Synchronized
-        fun resumeTh() {
-            running = true
-        }
-
-        fun stopTh() {
-            stop = true
-        }
-
-        override fun run() {
-            while (!this.isInterrupted) {
-                if (running) {
-                    updatePhysics()
-                    synchronized(this) {
-                        while (stop) {
-                            try {
-                                this.interrupt()
-                            } catch (e: Exception) {
-
-                            }
-                        }
-                    }
-                } else {
-                    try {
-                        sleep(100)
-                    } catch (e: Exception) {
-
-                    }
-                }
-            }
-        }
-    }
+    // Pause flag
+    private var pause: Boolean = false
 
     // Scores
     private var scores = 0
@@ -112,7 +69,9 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var mY = 0
     private var shot = false
 
-    val thread: GameThread = GameThread()
+    private val coroutine = CoroutineScope(Dispatchers.Default)
+    private var job: Job? = null
+//    val thread: GameThread = GameThread()
     private var lastProcess: Long = 0L
 
     private val asteroids: Vector<Graphics>
@@ -217,7 +176,6 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         }
 
         lastProcess = System.currentTimeMillis()
-        thread.start()
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -273,6 +231,8 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     @Synchronized
     private fun updatePhysics() {
+
+        if (pause) run {lastProcess = System.currentTimeMillis(); pause = false }
         // Calculate delta time
         val now = System.currentTimeMillis()
 
@@ -280,7 +240,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             return
         }
 
-        val delay: Double = ((now - lastProcess) / EXECUTION_PERIOD).toDouble()
+        val delay: Double = ((now - lastProcess) / EXECUTION_PERIOD.toDouble())
         lastProcess = now
 
         // Calculate ship position
@@ -354,5 +314,21 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 it.setResult(Activity.RESULT_OK, intent)
                 it.finish()
             }
+    }
+
+    fun resumeCoroutine() {
+        job = coroutine.launch {
+            delay(1000)
+            while (isActive) {
+                updatePhysics()
+            }
+        }
+    }
+
+    fun stopCoroutine() {
+        coroutine.launch {
+            pause = true
+            job?.cancelAndJoin()
+        }
     }
 }
