@@ -20,7 +20,7 @@
         </activity>
         <activity android:name=".AboutActivity" />
         <activity android:name=".Preferences" />
-        <activity android:name=".Scores" />
+        <activity android:name=".ScoresActivity" />
         <activity android:name=".AsteroidsGame"
             android:screenOrientation="landscape"
             android:hardwareAccelerated="false"

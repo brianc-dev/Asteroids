@@ -18,7 +18,6 @@ class GameMusicService: Service() {
     override fun onCreate() {
         super.onCreate()
         gameMediaPlayer = MediaPlayer.create(this, R.raw.main_music)
-        Toast.makeText(this, "Create", Toast.LENGTH_LONG).show()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

@@ -22,7 +22,7 @@ class ScoreStoragePreferences(private val context: Context): ScoresStorage {
     override fun saveScores(score: Int, name: String, date: Long) {
         coroutineScope.launch {
             try {
-                val socket = Socket("192.168.1.106", 2500)
+                val socket = Socket("192.168.1.107", 2500)
                 val input = BufferedReader(InputStreamReader(socket.getInputStream()))
                 val output = PrintWriter(OutputStreamWriter(socket.getOutputStream()), true)
                 output.println("$score $name")
@@ -50,7 +50,7 @@ class ScoreStoragePreferences(private val context: Context): ScoresStorage {
                 try {
                 val list = mutableListOf<String>()
 
-                val socket = Socket("192.168.1.106", 2500)
+                val socket = Socket("192.168.1.107", 2500)
                 val input = BufferedReader(InputStreamReader(socket.getInputStream()))
                 val output = PrintWriter(OutputStreamWriter(socket.getOutputStream()), true)
                 output.println("SCORES")

@@ -20,19 +20,18 @@ class AsteroidsGame: Activity() {
         super.onResume()
         val startMusicIntent = Intent(applicationContext, GameMusicService::class.java)
         startService(startMusicIntent)
-        gameView.thread.resumeTh()
+        gameView.resumeCoroutine()
     }
 
     override fun onPause() {
         super.onPause()
         val stopMusicIntent = Intent(applicationContext, GameMusicService::class.java)
         stopService(stopMusicIntent)
-        gameView.thread.pauseTh()
+        gameView.stopCoroutine()
     }
 
     override fun onDestroy() {
-        gameView.thread.stopTh()
+        gameView.stopCoroutine()
         super.onDestroy()
-
     }
 }
