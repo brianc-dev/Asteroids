@@ -4,4 +4,16 @@
     <string name="settings">Settings</string>
     <string name="credits">Credits</string>
     <string name="scores">Scores</string>
+
+    <string-array name="difficulty_entry">
+        <item>Easy</item>
+        <item>Medium</item>
+        <item>Hard</item>
+    </string-array>
+
+    <string-array name="difficulty_value">
+        <item>easy</item>
+        <item>medium</item>
+        <item>hard</item>
+    </string-array>
 </resources>

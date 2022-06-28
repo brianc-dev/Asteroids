@@ -1,16 +1,11 @@
 package com.alyx.asteroids
 
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Bundle
-import android.os.IBinder
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.alyx.asteroids.sounds.GameMusicService
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,7 +22,6 @@ class MainActivity : AppCompatActivity() {
         val anim = AnimationUtils.loadAnimation(this, R.anim.turn_and_zoom)
         val anim2 = AnimationUtils.loadAnimation(this, R.anim.appear)
         val anim3 = AnimationUtils.loadAnimation(this, R.anim.right_translation)
-        findViewById<TextView>(R.id.game_title).startAnimation(anim)
         findViewById<Button>(R.id.Button1).also {
             it.setOnClickListener {
                 launchGame()
@@ -60,22 +54,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
     private fun launchGame() {
         val intent = Intent(this, AsteroidsGame::class.java)
         startActivityForResult(intent, 1234)
@@ -92,7 +70,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun launchScores() {
-        val intent = Intent(this, Scores::class.java)
+        val intent = Intent(this, ScoresActivity::class.java)
         startActivity(intent)
     }
 }
