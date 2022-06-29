@@ -23,7 +23,6 @@
         <activity android:name=".ScoresActivity" />
         <activity android:name=".AsteroidsGame"
             android:screenOrientation="landscape"
-            android:hardwareAccelerated="false"
             android:theme="@style/AsteroidsGameTheme"/>
         <service android:name=".sounds.GameMusicService" android:exported="false" android:stopWithTask="true"
             />

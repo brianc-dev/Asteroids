@@ -19,6 +19,8 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.alyx.asteroids.R
 import com.alyx.asteroids.graphics.Graphics
+import com.alyx.asteroids.graphics.ScoresManager
+import com.alyx.asteroids.graphics.TimeManager
 import kotlinx.coroutines.*
 import java.util.*
 import kotlin.math.*
@@ -72,6 +74,9 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             return null
         }
 
+    private lateinit var scoresManager: ScoresManager
+    private lateinit var timeManager: TimeManager
+
     // Sound
     private val soundPool: SoundPool
     private val missileSoundId: Int
@@ -105,6 +110,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var shipAcceleration: Float = 0f
 
     init {
+
         // Load sound FX
         val audioAttributes = AudioAttributes.Builder().apply {
             setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -192,6 +198,9 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         super.onSizeChanged(w, h, oldw, oldh)
 
         this.setBackgroundResource(R.drawable.bg_1)
+
+        scoresManager = ScoresManager(h * 0.05f)
+        timeManager = TimeManager(h * 0.05f)
 
         // Set ship
         val shipDrawable = ResourcesCompat.getDrawable(resources, R.drawable.ship_1, null) ?: throw NoSuchElementException("Couldn't get ship resource")
@@ -302,6 +311,11 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             if (missileActive) {
                 missile.drawGraphic(it)
             }
+
+            // Draw score
+            scoresManager.drawScore(it)
+            // Draw time
+            timeManager.drawTime(it)
         }
     }
 
@@ -315,8 +329,9 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         if (lastProcess + EXECUTION_PERIOD > now) {
             return
         }
-
-        val delay: Double = ((now - lastProcess) / EXECUTION_PERIOD.toDouble())
+        val deltaT = now - lastProcess
+        timeManager.countTime(deltaT)
+        val delay: Double = (deltaT) / EXECUTION_PERIOD.toDouble()
         lastProcess = now
 
         // Calculate ship position
@@ -339,8 +354,8 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
         if (missileActive) {
             missile.incrementPos(delay)
-            missileTime -= delay.toInt()
-            if (missileTime < 0) {
+//            missileTime -= delay.toInt()
+            if (isMissileOutscreen()) {
                 missileActive = false
             } else {
 
@@ -388,16 +403,9 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         iterator.remove()
         missileActive = false
         soundPool.play(explosionSoundId, 1f, 1f, 0, 0, 1f)
-        scores += 100
-
+        scoresManager.incrementScore()
         if (asteroids.isNotEmpty()) return
-//        if (tier3Asteroid.isNotEmpty()) return
-//        if (tier2Asteroid.isNotEmpty()) return
-//        if (tier1Asteroid.isNotEmpty()) return
         exit()
-//        if (asteroids.isEmpty()) {
-//            exit()
-//        }
     }
 
     private fun divideAsteroid(iterator: MutableIterator<Graphics>, destroyedAsteroid: Graphics): MutableList<Graphics> {
@@ -420,15 +428,18 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     private fun launchMissile() {
+        if (missileActive) return
         missile.posX = ship.posX + ship.width / 2.0 - missile.width / 2.0
         missile.posY = ship.posY + ship.height / 2.0 - missile.height / 2.0
         missile.angle = ship.angle
         missile.incX = cos(Math.toRadians(missile.angle)) * MISSILE_SPEED_STEP
         missile.incY = sin(Math.toRadians(missile.angle)) * MISSILE_SPEED_STEP
-        missileTime =
-            (minOf(this.width / abs(missile.incX), this.height / abs(missile.incY)) - 2).toInt()
         missileActive = true
         soundPool.play(missileSoundId, 1.5f, 1.5f, 0, 0, 1f)
+    }
+
+    private fun isMissileOutscreen(): Boolean {
+        return missile.posX < x || missile.posY < y || missile.posX > width || missile.posY > height
     }
 
     private fun exit() {

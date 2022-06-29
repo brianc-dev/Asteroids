@@ -16,7 +16,7 @@ class Graphics(
 
     val width = drawable.intrinsicWidth
     val height = drawable.intrinsicHeight
-    private val collisionRadio = (width + height) / 5
+    private val collisionRadio = (width + height) / 4
 
     var posX: Double = 0.0
     var posY: Double = 0.0

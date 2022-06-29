@@ -18,6 +18,10 @@
     </style>
 
     <style name="AsteroidsGameTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowActionBar">false</item>
         <item name="android:windowFullscreen">true</item>
     </style>
+
 </resources>
