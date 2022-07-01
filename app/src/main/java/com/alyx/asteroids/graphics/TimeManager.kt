@@ -3,7 +3,6 @@ package com.alyx.asteroids.graphics
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.os.CountDownTimer
 
 class TimeManager(tSize: Float) {
     private val paint: Paint = Paint().apply {

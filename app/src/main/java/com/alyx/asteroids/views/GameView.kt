@@ -18,6 +18,7 @@ import androidx.annotation.IntDef
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.alyx.asteroids.R
+import com.alyx.asteroids.graphics.AsteroidButton
 import com.alyx.asteroids.graphics.Graphics
 import com.alyx.asteroids.graphics.ScoresManager
 import com.alyx.asteroids.graphics.TimeManager
@@ -59,7 +60,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     // Pause flag
-    private var pause: Boolean = false
+    private var pauseCoroutine: Boolean = false
 
     // Scores
     private var scores = 0
@@ -85,7 +86,6 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     // Missile
     private lateinit var missile: Graphics
     private var missileActive = false
-    private var missileTime = 0
 
     private var mX = 0
     private var mY = 0
@@ -109,6 +109,8 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var shipTilt: Int = 0
     private var shipAcceleration: Float = 0f
 
+    private var pause = false
+
     init {
 
         // Load sound FX
@@ -122,76 +124,15 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
 //        val asteroidDrawable: Drawable
         val sharedPreferences = context.getSharedPreferences("com.alyx.asteroids_preferences", Context.MODE_PRIVATE)
-//        if (sharedPreferences.getString("graphics", "1").equals("0")) {
-//            val asteroidPath = Path()
-//            asteroidPath.moveTo(0.3f, 0.0f)
-//            asteroidPath.lineTo(0.6f, 0.0f)
-//            asteroidPath.lineTo(0.6f, 0.3f)
-//            asteroidPath.lineTo(0.8f, 0.2f)
-//            asteroidPath.lineTo(1.0f, 0.4f)
-//            asteroidPath.lineTo(0.8f, 0.6f)
-//            asteroidPath.lineTo(0.9f, 0.9f)
-//            asteroidPath.lineTo(0.8f, 1.0f)
-//            asteroidPath.lineTo(0.4f, 1.0f)
-//            asteroidPath.lineTo(0.0f, 0.6f)
-//            asteroidPath.lineTo(0.0f, 0.2f)
-//            asteroidPath.lineTo(0.3f, 0.0f)
-//            val asteroidD = ShapeDrawable(PathShape(asteroidPath, 1f, 1f))
-//            asteroidD.paint.color = Color.WHITE
-//            asteroidD.paint.style = Paint.Style.STROKE
-//            asteroidD.intrinsicWidth = 100
-//            asteroidD.intrinsicHeight = 100
-//
-//            asteroidDrawable = asteroidD
-//            setBackgroundColor(Color.BLACK)
-//
-//            // Initialize missile
-//            val missileD = ShapeDrawable(RectShape())
-//            missileD.paint.color = Color.WHITE
-//            missileD.paint.style = Paint.Style.STROKE
-//            missileD.intrinsicWidth = 15
-//            missileD.intrinsicHeight = 3
-//            missileDrawable = missileD
-//
-//        } else {
-//            asteroidDrawable =
-//                ResourcesCompat.getDrawable(context.resources,
-//                    R.drawable.tier3_asteroid,
-//                    null)
-//                    ?: throw NoSuchElementException()
-//        }
+
         when (sharedPreferences.getString("difficulty", null)) {
             "easy" -> difficulty = EASY
             "medium" -> difficulty = MEDIUM
             "hard" -> difficulty = HARD
         }
 
-        // Missile initialize
-//        missileDrawable = ResourcesCompat.getDrawable(
-//            context.resources,
-//            R.drawable.missile_1,
-//            null
-//        ) ?: throw NoSuchElementException()
-
-//        this.missile = Graphics(this, missileDrawable)
-
-        // Ship initialize
-//        val shipDrawable: Drawable =
-//            ResourcesCompat.getDrawable(context.resources, R.drawable.ship_1, null) ?: throw NoSuchElementException()
-//        val shipBitmap = shipDrawable.toBitmap(100, 100, null)
-//        this.ship = Graphics(this, shipBitmap.toDrawable(resources))
-
-//        asteroids = Vector(asteroidsNumber)
         // Small size asteroid
         asteroids = Vector()
-//        for (i in 0 until asteroidsNumber) {
-//            val asteroid = Graphics(this, asteroidDrawable)
-//            asteroid.incY = Math.random() * 4 - 2 * difficultyFactor
-//            asteroid.incX = Math.random() * 4 - 2 * difficultyFactor
-//            asteroid.angle = Math.random() * 360
-//            asteroid.rotation = Math.random() * 8 - 4
-//            asteroids.add(asteroid)
-//        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -264,6 +205,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         super.onTouchEvent(event)
+        if (pause) return true
         requireNotNull(event)
         val x = event.x
         val y = event.y
@@ -321,8 +263,13 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     @Synchronized
     private fun updatePhysics() {
+        if (pause) {
+            lastProcess = System.currentTimeMillis()
+            return
+        }
+        // FIXME: Check this
+        if (pauseCoroutine) run {lastProcess = System.currentTimeMillis(); pauseCoroutine = false }
 
-        if (pause) run {lastProcess = System.currentTimeMillis(); pause = false }
         // Calculate delta time
         val now = System.currentTimeMillis()
 
@@ -347,49 +294,23 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         ship.incrementPos(delay)
 
         // Calculate asteroids position
-
         for (asteroid in asteroids) {
             asteroid.incrementPos(delay)
         }
 
         if (missileActive) {
             missile.incrementPos(delay)
-//            missileTime -= delay.toInt()
             if (isMissileOutscreen()) {
                 missileActive = false
             } else {
 
                 val iterator = asteroids.iterator()
 
-//                for (asteroid in tier3Iterator) {
-//                    if (missile.checkCollision(asteroid)) {
-////                        destroyAsteroid(tier3Iterator, asteroid)
-//                        val newAsteroids = divideAsteroid(tier3Iterator, asteroid)
-//                        tier2Asteroid.addAll(newAsteroids)
-//                    }
-//                }
-//
-//                for (asteroid in tier2Iterator) {
-//                    if (missile.checkCollision(asteroid)) {
-////                        destroyAsteroid(tier2Iterator, asteroid)
-//                        val newAsteroids = divideAsteroid(tier2Iterator, asteroid)
-//                        tier1Asteroid.addAll(newAsteroids)
-//                    }
-//                }
-
                 for (asteroid in iterator) {
                     if (missile.checkCollision(asteroid)) {
                         destroyAsteroid(iterator)
                     }
                 }
-
-//                val asteroidsIterator = asteroids.iterator()
-//                for (asteroid in asteroidsIterator) {
-//                    if (missile.checkCollision(asteroid)) {
-//                        destroyAsteroid(asteroidsIterator, null)
-//                        break
-//                    }
-//                }
             }
         }
 
@@ -455,6 +376,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
             }
     }
 
+    @Synchronized
     fun resumeCoroutine() {
         job = coroutine.launch {
             delay(1000)
@@ -464,10 +386,15 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         }
     }
 
+    @Synchronized
     fun stopCoroutine() {
         coroutine.launch {
-            pause = true
+            pauseCoroutine = true
             job?.cancelAndJoin()
         }
+    }
+
+    fun togglePause() {
+        pause = !pause
     }
 }
