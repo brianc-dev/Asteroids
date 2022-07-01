@@ -24,4 +24,8 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
+    <declare-styleable name="AsteroidsButton">
+        <attr name="text" format="string" />
+        <attr name="color" format="color" />
+    </declare-styleable>
 </resources>

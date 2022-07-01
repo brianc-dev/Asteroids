@@ -2,6 +2,7 @@ package com.alyx.asteroids
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.TextView
@@ -19,25 +20,21 @@ class MainActivity : AppCompatActivity() {
 
         scoresStorage = ScoreStoragePreferences(this)
 
-        val anim = AnimationUtils.loadAnimation(this, R.anim.turn_and_zoom)
-        val anim2 = AnimationUtils.loadAnimation(this, R.anim.appear)
-        val anim3 = AnimationUtils.loadAnimation(this, R.anim.right_translation)
-        findViewById<Button>(R.id.Button1).also {
+//        val anim = AnimationUtils.loadAnimation(this, R.anim.turn_and_zoom)
+        findViewById<View>(R.id.Button1).also {
             it.setOnClickListener {
                 launchGame()
             }
-            it.startAnimation(anim2)
         }
-        findViewById<Button>(R.id.Button2).also {
-            it.startAnimation(anim3)
+        findViewById<View>(R.id.Button2).also {
             it.setOnClickListener {
                 launchSettings()
             }
         }
-        findViewById<Button>(R.id.Button3).setOnClickListener {
+        findViewById<View>(R.id.Button3).setOnClickListener {
             launchAbout()
         }
-        findViewById<Button>(R.id.Button4).setOnClickListener {
+        findViewById<View>(R.id.Button4).setOnClickListener {
             launchScores()
         }
     }
