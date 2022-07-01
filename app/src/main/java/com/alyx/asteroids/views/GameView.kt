@@ -18,7 +18,6 @@ import androidx.annotation.IntDef
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.alyx.asteroids.R
-import com.alyx.asteroids.graphics.AsteroidButton
 import com.alyx.asteroids.graphics.Graphics
 import com.alyx.asteroids.graphics.ScoresManager
 import com.alyx.asteroids.graphics.TimeManager
@@ -123,7 +122,7 @@ class GameView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         missileSoundId = soundPool.load(context, R.raw.missile, 0)
 
 //        val asteroidDrawable: Drawable
-        val sharedPreferences = context.getSharedPreferences("com.alyx.asteroids_preferences", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences(context.getString(R.string.preferences_file), Context.MODE_PRIVATE)
 
         when (sharedPreferences.getString("difficulty", null)) {
             "easy" -> difficulty = EASY

@@ -2,6 +2,7 @@ package com.alyx.asteroids
 
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
@@ -16,6 +17,8 @@ class AsteroidsGame : Activity() {
 
     private lateinit var gameView: GameView
     private lateinit var pauseButton: AsteroidButton
+
+    private var music = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,19 +39,27 @@ class AsteroidsGame : Activity() {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        getSharedPreferences(getString(R.string.preferences_file), MODE_PRIVATE).run {
+            music = getBoolean(getString(R.string.music_key), true)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        val startMusicIntent = Intent(applicationContext, GameMusicService::class.java)
-        startService(startMusicIntent)
+        if (music) {
+            val startMusicIntent = Intent(applicationContext, GameMusicService::class.java)
+            startService(startMusicIntent)
+        }
         gameView.resumeCoroutine()
     }
 
     override fun onPause() {
         super.onPause()
-        val stopMusicIntent = Intent(applicationContext, GameMusicService::class.java)
-        stopService(stopMusicIntent)
+        if (music) {
+            val stopMusicIntent = Intent(applicationContext, GameMusicService::class.java)
+            stopService(stopMusicIntent)
+        }
         gameView.stopCoroutine()
     }
 

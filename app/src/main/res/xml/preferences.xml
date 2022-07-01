@@ -1,30 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:key="main_prefs"
-    android:title="Settings"
-    >
-
+    android:title="Settings">
     <CheckBoxPreference
         android:key="music"
-        android:title="Play music"
         android:summary="Turn on/off the music"
-        />
-    <PreferenceCategory android:title="Gameplay settings"/>
-    <EditTextPreference
-        android:key="particles"
-        android:title="Number of particles"
-        android:summary="How many particles an asteroid will be divided"
-        android:defaultValue="3"
-        />
-    <PreferenceCategory
-        android:title="Difficulty" />
+        android:defaultValue="true"
+        android:title="Play music" />
+    <PreferenceCategory android:title="Difficulty" />
     <ListPreference
+        android:defaultValue="easy"
         android:entries="@array/difficulty_entry"
         android:entryValues="@array/difficulty_value"
         android:key="difficulty"
-        android:defaultValue="easy"
-        android:title="Game difficulty"
         android:summary="Select game difficulty"
-        />
-
+        android:title="Game difficulty" />
 </PreferenceScreen>

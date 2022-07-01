@@ -23,6 +23,11 @@ class MainActivity : AppCompatActivity() {
 
         scoresStorage = ScoreStoragePreferences(this)
 
+        hideNavigationBarAndKeepScreenOn()
+        setupListeners()
+    }
+
+    private fun hideNavigationBarAndKeepScreenOn() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(
             window,
@@ -33,8 +38,9 @@ class MainActivity : AppCompatActivity() {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
 
-//        val anim = AnimationUtils.loadAnimation(this, R.anim.turn_and_zoom)
+    private fun setupListeners() {
         findViewById<View>(R.id.Button1).also {
             it.setOnClickListener {
                 launchGame()

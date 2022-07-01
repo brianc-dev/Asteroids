@@ -16,4 +16,7 @@
         <item>medium</item>
         <item>hard</item>
     </string-array>
+
+    <string name="preferences_file">com.alyx.asteroids_preferences</string>
+    <string name="music_key">music</string>
 </resources>
