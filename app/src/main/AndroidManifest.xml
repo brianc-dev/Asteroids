@@ -19,7 +19,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".AboutActivity" />
-        <activity android:name=".Preferences" />
+        <activity android:name=".Preferences"
+            android:theme="@style/AsteroidsGameTheme"
+            />
         <activity android:name=".ScoresActivity" />
         <activity android:name=".AsteroidsGame"
             android:screenOrientation="landscape"

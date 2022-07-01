@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ASTEROIDS</string>
+    <string name="app_name">Asteroids</string>
     <string name="start">START</string>
     <string name="settings">SETTINGS</string>
     <string name="credits">CREDITS</string>

@@ -13,13 +13,13 @@ import com.alyx.asteroids.R
 import com.alyx.asteroids.toPx
 import com.google.android.material.color.MaterialColors
 
-class AsteroidsButton @JvmOverloads constructor(
+open class AsteroidsButton @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ): View(context, attrs, defStyleAttr) {
 
-    private val paint: Paint = Paint().apply {
+    protected val paint: Paint = Paint().apply {
         color = Color.WHITE
         textAlign = Paint.Align.CENTER
         textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PT, 11f, context.resources.displayMetrics)
@@ -29,7 +29,7 @@ class AsteroidsButton @JvmOverloads constructor(
     var borderPadding = 5.toPx
     var borderStrokeWidth = 5f.toPx
 
-    private var text: String = "Button"
+    protected var text: String = "Button"
     private var color: Int = Color.GREEN
 
     init {
